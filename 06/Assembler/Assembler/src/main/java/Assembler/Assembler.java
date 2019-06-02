@@ -2,11 +2,15 @@ package Assembler;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.NumberFormat;
 import java.text.ParsePosition;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,28 +31,44 @@ public final class Assembler {
      * @param args
      * @throws Exception
      */
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Exception, IndexOutOfBoundsException {
         logger = LoggerFactory.getLogger(Assembler.class);
-
+        String assemblyFile;
         // Parse input program name
-        String assemblyFile = args[0];
+        try{
+            assemblyFile = args[0];
+        }
+        catch(IndexOutOfBoundsException e){
+            logger.debug("Assembler arguments empty, please input a file name");
+            throw e;
+        }
         Assembler assembler = new Assembler();
         assembler.run(assemblyFile);
     }
 
-    protected void run(String assemblyFile) throws Exception {
+    protected void run(String assemblyFilePath) throws Exception, IOException {
         String hackFile;
-
+        String assemblyFile = Paths.get(new URI(assemblyFilePath).getPath()).getFileName().toString();
         // Validate user input
         if (assemblyFile.matches(".*" + assemblyExt))
             hackFile = assemblyFile.substring(0, assemblyFile.indexOf(".")) + hackExt;
         else {
             logger.debug("Invalid file input");
-            throw new IOException("Please input a valid .asm file");
+            throw new Exception("Please input a valid .asm file");
+        }
+        
+        //Open File, trim and parse relevant commands
+        List<String> commands;
+        try {
+            commands = Files.lines(Paths.get(assemblyFilePath)).map(s -> s.replaceAll("//.*", "")).map(s -> s.trim()).filter(s -> !s.isEmpty())
+                            .filter(s->!s.matches("//.*")).collect(Collectors.toList());
+        } catch (IOException e) {
+            logger.debug("Input file could not be read because " + e.getMessage());
+            throw e;
         }
 
         // Create parser and file writer
-        Parser parser = new Parser(assemblyFile);
+        Parser parser = new Parser(commands);
         SymbolTable st = new SymbolTable();
         FileWriter fw = new FileWriter(hackFile);
 
@@ -104,8 +124,8 @@ public final class Assembler {
             }
         }
         //Close new file and flush file writer
-        fw.close();
         fw.flush();
+        fw.close();
     }
 
     /**

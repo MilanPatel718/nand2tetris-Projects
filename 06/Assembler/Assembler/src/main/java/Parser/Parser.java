@@ -1,33 +1,21 @@
 package Parser;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
-import java.util.stream.Collectors;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import Coder.Coder;
 
 
 public class Parser {
     private List<String> commands;
-    private Logger logger;
 
     /**
      * Constructor for Parser Class
      * 
      * @param instructions
+     * @throws IOException
      */
-    public Parser(String assemblyFile) {
-        logger = LoggerFactory.getLogger(Parser.class);
-        try {
-            commands = Files.lines(Paths.get(assemblyFile)).map(s -> s.replaceAll("//.*", "")).map(s -> s.trim()).filter(s -> !s.isEmpty())
-                            .filter(s->!s.matches("//.*")).collect(Collectors.toList());
-        } catch (IOException e) {
-            logger.info("Input file could not be read because " + e.getMessage());
-        }
+    public Parser(List<String> commands){
+        this.commands = commands;
     }
 
     /**

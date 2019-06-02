@@ -1,53 +1,88 @@
 package Assembler;
 
-
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameter;
-import org.junit.runners.Parameterized.Parameters;
+import org.slf4j.LoggerFactory;
+
+import static org.mockito.Mockito.*;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
 
 import Assembler.Assembler;
 
+import junitparams.*;
+
 import static org.junit.Assert.*;
+
+import org.junit.Before;
+
+import static Assembler.Assembler.logger;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
-import java.util.Arrays;
-import java.util.Collection;
 
-@RunWith(Parameterized.class)
+@RunWith(JUnitParamsRunner.class)
 public class AssemblerTest {
 
-    //Test Parameters
-    @Parameter
-    public String decimalVal;
-    @Parameter(1)
-    public String binaryReturn;
+    Assembler assembler;
 
-    //Creates test data
-    @Parameters
-    public static Collection<Object[]> data(){
-        Object[][] data = new Object[][] 
-        {{"10", "0000000000001010"}, {"32767", "0111111111111111"}, {"35000", "Too large, will throw exception"},
-         {"-25", "Negative addresses not allowed"}};
+    @Before
+    public void setup() {
+        assembler = new Assembler();
+        logger = LoggerFactory.getLogger(Assembler.class);
+    }
+    @Rule
+    public ExpectedException exception = ExpectedException.none();
+    
+    @Test
+    @Parameters({"10,0000000000001010", "32767,0111111111111111"})
+    public void getCorrectbinaryTest(String decimalVal, String binaryReturn) throws Exception {
+        //Assembler assembler = new Assembler();
+        assertThat("Returns valid 16 bit binary", assembler.getBinary(decimalVal), is(binaryReturn));
+    }
 
-        return Arrays.asList(data);
+    @Test
+    @Parameters({"-25","32768"})
+    public void getBinaryThrowsExceptionTest(String decimalSymbol) throws Exception {
+        exception.expect(Exception.class);
+        exception.expectMessage("Decimal must be >=0 and < 32768");
+        assembler.getBinary(decimalSymbol);
+
+    }
+
+    @Test
+    @Parameters({"add.hack"})
+    public void testRunThrowsExceptionForInvalidFile(String assemblyFile) throws IndexOutOfBoundsException, Exception {
+        exception.expect(Exception.class);
+        exception.expectMessage("Please input a valid .asm file");
+        assembler.run(assemblyFile);
+    }
+    @Test
+    @Parameters({"add.asm"})
+    public void testRunThrowsIOExceptionForMissingFile(String assemblyFile) throws IndexOutOfBoundsException, Exception {
+        exception.expect(IOException.class);
+        assembler.run(assemblyFile);
     }
     
     @Test
-    public void getBinaryTest() {
-        Assembler assembler = new Assembler();
-        try{
-            assertThat("Returns valid 16 bit binary", assembler.getBinary(decimalVal), is(binaryReturn));
-        }
-        catch(Exception e){
-            assertEquals("Decimal values > 32767 throw exception", "Decimal must be >=0 and < 32768" , e.getMessage());
-        }
-        
+    @Parameters({"100,true", "abc,false", "2ac,false", "1000000,true","test@email.com,false"})
+    public void testIsNumeric(String inputString, boolean valid){
+        assertThat(Assembler.isNumeric(inputString), is(valid));
     }
-
     
-
-
+    @Test
+    @Parameters({"/max.asm"})
+    public void testRun(String assemblyFile) throws IOException, Exception {
+        /*URL url = this.getClass().getResource(assemblyFile);
+        String assemblyFilePath = url.toString();
+        assembler.run(assemblyFilePath.substring(assemblyFilePath.indexOf(":") + 1));
+        */
+        File resourcesDirectory = new File("Assembler/src/test/resources" + assemblyFile);
+        assembler.run(resourcesDirectory.getAbsolutePath());
+    }
+    
 }
