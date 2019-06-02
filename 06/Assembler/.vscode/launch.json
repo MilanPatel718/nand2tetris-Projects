@@ -1,0 +1,17 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "CodeLens (Launch) - Assembler",
+            "request": "launch",
+            "mainClass": "Assembler.Assembler",
+            "projectName": "Assembler"
+        },
+        {
+            "type": "java",
+            "name": "CodeLens (Launch) - Assembler",
+            "request": "launch",
+            "mainClass": "Assembler"
+        }
+    ]
+}

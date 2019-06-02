@@ -25,9 +25,9 @@ public final class Assembler {
     /**
      * 
      * @param args
-     * @throws IOException
+     * @throws Exception
      */
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
         logger = LoggerFactory.getLogger(Assembler.class);
 
         // Parse input program name
@@ -36,7 +36,7 @@ public final class Assembler {
         assembler.run(assemblyFile);
     }
 
-    protected void run(String assemblyFile) throws IOException {
+    protected void run(String assemblyFile) throws Exception {
         String hackFile;
 
         // Validate user input
@@ -103,8 +103,9 @@ public final class Assembler {
                 fw.write(binaryCommand.toString() + "\n");
             }
         }
-        //Close new file
+        //Close new file and flush file writer
         fw.close();
+        fw.flush();
     }
 
     /**
@@ -112,9 +113,13 @@ public final class Assembler {
      * 
      * @param decimalSymbol
      * @return
+     * @throws Exception
      */
-    private String getBinary(String decimalSymbol) {
+    protected String getBinary(String decimalSymbol) throws Exception {
         Integer decimal = Integer.parseInt(decimalSymbol);
+        if(decimal > 32767 || decimal < 0)
+            throw new Exception("Decimal must be >=0 and < 32768");
+            
         StringBuilder binaryBuilder = new StringBuilder();
         binaryBuilder.append("0");
         List<Integer> significantBits = new ArrayList<>();
