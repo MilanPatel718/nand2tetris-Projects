@@ -52,7 +52,7 @@ public final class VMtranslator {
         Matcher vmMatcher = vmPattern.matcher(vMarg);
         Path inputPath = Paths.get(vMarg);
         
-        logger.info("Validating input");
+        //Single .vm file input
         if (vmMatcher.matches()){
             Path fullPath;
             try{
@@ -72,6 +72,7 @@ public final class VMtranslator {
             this.codeWriter.setAsmFileName(fullPath.getFileName().toString());
             try{
                 this.codeWriter.writeLines();
+                this.codeWriter.terminateProgram();
             }
             catch(Exception e){
                 logger.error("Error with {} due to " + e.getMessage(), this.codeWriter.getAsmFileName());

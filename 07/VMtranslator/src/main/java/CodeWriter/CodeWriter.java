@@ -27,8 +27,6 @@ public class CodeWriter {
     private static int eqId = 1;
     private static int gtId = 1;
     private static int ltId = 1;
-    private static int andId = 1;
-    private static int orId = 1;
 
     /**
      * 
@@ -75,8 +73,6 @@ public class CodeWriter {
 
             }
         }
-        fw.write(progTerminate);
-        logger.info("Finished writing file");
         fw.flush();
         fw.close();
 
@@ -234,5 +230,17 @@ public class CodeWriter {
         }
         return returnCommand.toString();
     }
+
+    /**
+     * Writes program termination block after threads finish writing all lines
+     * @throws IOException
+     */
+	public void terminateProgram() throws IOException {
+        FileWriter fw = new FileWriter(this.asmFileName, true);
+        fw.write(progTerminate);
+        logger.info("Finished writing file");
+        fw.flush();
+        fw.close();
+	}
 
 }
