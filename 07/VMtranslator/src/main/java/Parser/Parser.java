@@ -31,8 +31,8 @@ public class Parser implements Callable<Map<String,Pair<String,String>>>{
     @Override
     public Map<String,Pair<String,String>> call() throws Exception {
         try{
-        this.vmCommands = Files.lines(this.inputFilePath).map(s -> s.trim().replaceAll("//.*", "")).filter(s -> !s.isEmpty())
-                                    .filter(s -> !s.matches("//.*")).collect(Collectors.toList());
+                this.vmCommands = Files.lines(inputFilePath).map(s -> s.trim().replaceAll("//.*", "")).filter(s -> !s.isEmpty())
+                .filter(s -> !s.matches("//.*")).collect(Collectors.toList());
         }
         catch(IOException e){
             logger.error("Input vm file could not be parsed because {}", e.getMessage());

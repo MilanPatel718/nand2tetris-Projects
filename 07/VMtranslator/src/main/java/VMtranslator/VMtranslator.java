@@ -8,6 +8,7 @@ import CodeWriter.CodeWriter;
 import Parser.Parser;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -16,6 +17,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Main Virtual Machine class and application entry point Creates parsers and
@@ -80,7 +82,45 @@ public final class VMtranslator {
             }
             this.executorService.shutdown();
         }
+        //Directory input
+        else{
+            Path fullPath;
+            try{
+                fullPath = inputPath.toRealPath();
+            }
+            catch(IOException e){
+                logger.error("Input directory does not exist");
+                throw e;
+            }
+            List<Path> fileNames = Files.list(fullPath)
+                .filter(s -> s.toString().endsWith(".vm"))
+                .sorted()
+                .collect(Collectors.toList());
 
-        
+            for(Path p : fileNames){
+                logger.debug("The path is {} ", p.toAbsolutePath());
+            }
+
+            logger.info("Starting Threads");
+            this.executorService = Executors.newFixedThreadPool(fileNames.size());
+            this.futures = new Future[fileNames.size()];
+            for(int i = 0; i < fileNames.size(); i++){
+                this.futures[i] = this.executorService.submit(new Parser(fileNames.get(i).toRealPath()));
+            }
+            this.codeWriter = new CodeWriter(this.futures);
+
+            //Set asm file name
+            this.codeWriter.setAsmFileName(fullPath.getFileName().toString());
+            try{
+                this.codeWriter.writeLines();
+                this.codeWriter.terminateProgram();
+            }
+            catch(Exception e){
+                logger.error("Error with {} due to " + e.getMessage(), this.codeWriter.getAsmFileName());
+                throw e;
+            }
+            this.executorService.shutdown();
+
+        }
     }
 }
