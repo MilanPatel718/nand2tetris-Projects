@@ -19,6 +19,7 @@ public class CodeWriter {
     private static final Logger logger = LoggerFactory.getLogger(CodeWriter.class);
     private Future<Map<String,Pair<String,String>>>[] parsedOutput;
     private String asmFileName;
+    private String fileName;
 
     //Globals for CodeWriter
     private static String stackInc = "@R0\nM=M+1\n";
@@ -41,7 +42,8 @@ public class CodeWriter {
      * @param asmFileName
      */
     public void setAsmFileName(String asmFileName) {
-        this.asmFileName = removeExtension(asmFileName) + ".asm";
+        this.fileName = removeExtension(asmFileName);
+        this.asmFileName = this.fileName + ".asm";
     }
 
     /**
@@ -178,55 +180,62 @@ public class CodeWriter {
         //Push case
         if(cmdType.equals("C_PUSH")){
             if(segment.equals("argument"))
-                returnCommand.append("str");
-
+                returnCommand.append("@R2\nD=M\n@" + index + "\nA=A+D\nD=M\n@R0\nA=M\nM=D\n" + stackInc);
             else if(segment.equals("local"))
-                returnCommand.append("str");
-
+                returnCommand.append("@R1\nD=M\n@" + index + "\nA=A+D\nD=M\n@R0\nA=M\nM=D\n" + stackInc);
             else if(segment.equals("static"))
-                returnCommand.append("str");
+                returnCommand.append("@" + this.fileName + "." + index + "\nD=M\n@R0\nA=M\nM=D\n" + stackInc);
 
             else if(segment.equals("constant"))
                 returnCommand.append("@"+index+"\nD=A\n@R0\nA=M\nM=D\n" + stackInc);
             
             else if(segment.equals("this"))
-                returnCommand.append("str");
+                returnCommand.append("@R3\nD=M\n@" + index + "\nA=A+D\nD=M\n@R0\nA=M\nM=D\n" + stackInc);
             
             else if(segment.equals("that"))
-                returnCommand.append("str");
-
+                returnCommand.append("@R4\nD=M\n@" + index + "\nA=A+D\nD=M\n@R0\nA=M\nM=D\n" + stackInc);
+            
             else if(segment.equals("pointer"))
-                returnCommand.append("str");
+                returnCommand.append("@3\nD=A\n@" + index + "\nA=A+D\nD=M\n@R0\nA=M\nM=D\n" + stackInc);
             //tmp segment
             else
-                returnCommand.append("str");
-
-        }
+                returnCommand.append("@5\nD=A\n@" + index + "\nA=A+D\nD=M\n@R0\nA=M\nM=D\n" + stackInc);
+         }
         //Pop case
         else{
-            if(segment.equals("argument"))
-                returnCommand.append("str");
+            if(segment.equals("argument")){
+                returnCommand.append
+                (stackDec + "@R0\nA=M\nD=M\n@R13\nM=D\n@R2\nD=M\n@" + index + "\nA=A+D\nD=A\n@R14\nM=D\n@R13\nD=M\n@R14\nA=M\nM=D\n");
+            }
 
-            else if(segment.equals("local"))
-                returnCommand.append("str");
+            else if(segment.equals("local")){
+                returnCommand.append
+                (stackDec + "@R0\nA=M\nD=M\n@R13\nM=D\n@R1\nD=M\n@" + index + "\nA=A+D\nD=A\n@R14\nM=D\n@R13\nD=M\n@R14\nA=M\nM=D\n");
+            }
 
             else if(segment.equals("static"))
-                returnCommand.append("str");
-
-            else if(segment.equals("constant"))
-                returnCommand.append("str");
+                returnCommand.append
+                (stackDec + "@R0\nA=M\nD=M\n@R13\nM=D\n@" + this.fileName + "." + index + "\nD=A\n@R14\nM=D\n@R13\nD=M\n@R14\nA=M\nM=D\n");
             
-            else if(segment.equals("this"))
-                returnCommand.append("str");
+            else if(segment.equals("this")){
+                returnCommand.append
+                (stackDec + "@R0\nA=M\nD=M\n@R13\nM=D\n@R3\nD=M\n@" + index + "\nA=A+D\nD=A\n@R14\nM=D\n@R13\nD=M\n@R14\nA=M\nM=D\n");
+            }
             
-            else if(segment.equals("that"))
-                returnCommand.append("str");
+            else if(segment.equals("that")){
+                returnCommand.append
+                (stackDec + "@R0\nA=M\nD=M\n@R13\nM=D\n@R4\nD=M\n@" + index + "\nA=A+D\nD=A\n@R14\nM=D\n@R13\nD=M\n@R14\nA=M\nM=D\n");
+            }
 
-            else if(segment.equals("pointer"))
-                returnCommand.append("str");
+            else if(segment.equals("pointer")){
+                returnCommand.append
+                (stackDec + "@R0\nA=M\nD=M\n@R13\nM=D\n@3\nD=A\n@" + index + "\nA=A+D\nD=A\n@R14\nM=D\n@R13\nD=M\n@R14\nA=M\nM=D\n");
+            }
             //tmp segment
-            else
-                returnCommand.append("str");
+            else{
+                returnCommand.append
+                (stackDec + "@R0\nA=M\nD=M\n@R13\nM=D\n@5\nD=A\n@" + index + "\nA=A+D\nD=A\n@R14\nM=D\n@R13\nD=M\n@R14\nA=M\nM=D\n");
+            }
         }
         return returnCommand.toString();
     }
