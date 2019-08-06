@@ -112,6 +112,7 @@ public final class VMtranslator {
             //Set asm file name
             this.codeWriter.setAsmFileName(fullPath.getFileName().toString());
             try{
+                this.codeWriter.writeInit();
                 this.codeWriter.writeLines();
                 this.codeWriter.terminateProgram();
             }
